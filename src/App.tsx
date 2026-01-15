@@ -8,12 +8,23 @@ const client = generateClient<Schema>();
 function App() {  
   const { user, signOut } = useAuthenticator();
   const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
-  
+  const [hello, setHello] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<Schema["getSubscription"]["type"] | null>(null);
+
+  useEffect(() => {
+    client.queries.sayHello({
+      name: "Amplify",
+    }).then((data) => setHello(data.data ?? "No data"));
+  }, []);
 
   useEffect(() => {
     client.models.Todo.observeQuery().subscribe({
       next: (data) => setTodos([...data.items]),
     });
+  }, []);
+
+  useEffect(() => {
+    client.queries.getSubscription().then((data) => setSubscription(data.data ?? { ok: false, subscriptionId: null, subscriptionStatus: null }));
   }, []);
 
   function createTodo() {
@@ -27,6 +38,10 @@ function App() {
   return (
     <main>      
       <h1>{user?.signInDetails?.loginId}'s todos</h1>
+      <p>{hello}</p>
+      <p>Subscription ID: {subscription?.subscriptionId}</p>
+      <p>Subscription Status: {subscription?.subscriptionStatus}</p>
+      <p>Subscription OK: {subscription?.ok ? "Yes" : "No"}</p>
       <button onClick={createTodo}>+ new</button>
       <ul>
         {todos.map((todo) => (
