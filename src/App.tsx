@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { generateClient } from "aws-amplify/data";
+import { Button } from "@/components/ui/button"
 
 const client = generateClient<Schema>();
 
@@ -42,13 +43,13 @@ function App() {
       <p className="text-lg">Subscription ID: {subscription?.subscriptionId}</p>
       <p className="text-lg">Subscription Status: {subscription?.subscriptionStatus}</p>
       <p className="text-lg">Subscription OK: {subscription?.ok ? "Yes" : "No"}</p>
-      <button className="bg-blue-500 text-white p-2 rounded-md" onClick={createTodo}>+ new</button>
+      <Button onClick={createTodo}>+ new</Button>
       <ul className="list-none">
         {todos.map((todo) => (
           <li className="bg-white p-2 rounded-md" key={todo.id} onClick={() => deleteTodo(todo.id)}>{todo.content}</li>
         ))}
       </ul>
-      <button className="bg-red-500 text-white p-2 rounded-md" onClick={signOut}>Sign out</button>
+      <Button onClick={signOut}>Sign out</Button>
     </main>
   );
 }
