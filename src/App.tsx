@@ -37,25 +37,18 @@ function App() {
 
   return (
     <main>      
-      <h1>{user?.signInDetails?.loginId}'s todos</h1>
-      <p>{hello}</p>
-      <p>Subscription ID: {subscription?.subscriptionId}</p>
-      <p>Subscription Status: {subscription?.subscriptionStatus}</p>
-      <p>Subscription OK: {subscription?.ok ? "Yes" : "No"}</p>
-      <button onClick={createTodo}>+ new</button>
-      <ul>
+      <h1 className="text-2xl font-bold">{user?.signInDetails?.loginId}'s todos</h1>
+      <p className="text-lg">{hello}</p>
+      <p className="text-lg">Subscription ID: {subscription?.subscriptionId}</p>
+      <p className="text-lg">Subscription Status: {subscription?.subscriptionStatus}</p>
+      <p className="text-lg">Subscription OK: {subscription?.ok ? "Yes" : "No"}</p>
+      <button className="bg-blue-500 text-white p-2 rounded-md" onClick={createTodo}>+ new</button>
+      <ul className="list-none">
         {todos.map((todo) => (
-          <li key={todo.id} onClick={() => deleteTodo(todo.id)}>{todo.content}</li>
+          <li className="bg-white p-2 rounded-md" key={todo.id} onClick={() => deleteTodo(todo.id)}>{todo.content}</li>
         ))}
       </ul>
-      <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://docs.amplify.aws/react/start/quickstart/#make-frontend-updates">
-          Review next step of this tutorial.
-        </a>
-      </div>
-      <button onClick={signOut}>Sign out</button>
+      <button className="bg-red-500 text-white p-2 rounded-md" onClick={signOut}>Sign out</button>
     </main>
   );
 }
