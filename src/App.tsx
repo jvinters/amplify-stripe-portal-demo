@@ -1,56 +1,120 @@
-import { useEffect, useState } from "react";
-import type { Schema } from "../amplify/data/resource";
-import { useAuthenticator } from '@aws-amplify/ui-react';
-import { generateClient } from "aws-amplify/data";
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Authenticator } from "@aws-amplify/ui-react";
+import { useAuthenticator } from "@aws-amplify/ui-react";
+import { getCurrentUser } from "aws-amplify/auth";
+import { LoginPage } from "@/pages/LoginPage";
+import { DashboardPage } from "@/pages/DashboardPage";
+import { SubscriptionsPage } from "@/pages/SubscriptionsPage";
+import { Layout } from "@/components/layout/Layout";
 
-const client = generateClient<Schema>();
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuthenticator();
 
-function App() {  
-  const { user, signOut } = useAuthenticator();
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
-  const [hello, setHello] = useState<string | null>(null);
-  const [subscription, setSubscription] = useState<Schema["getSubscription"]["type"] | null>(null);
-
-  useEffect(() => {
-    client.queries.sayHello({
-      name: "Amplify",
-    }).then((data) => setHello(data.data ?? "No data"));
-  }, []);
-
-  useEffect(() => {
-    client.models.Todo.observeQuery().subscribe({
-      next: (data) => setTodos([...data.items]),
-    });
-  }, []);
-
-  useEffect(() => {
-    client.queries.getSubscription().then((data) => setSubscription(data.data ?? { ok: false, subscriptionId: null, subscriptionStatus: null }));
-  }, []);
-
-  function createTodo() {
-    client.models.Todo.create({ content: window.prompt("Todo content") });
+  if (!user) {
+    return <Navigate to="/" replace />;
   }
-    
-  function deleteTodo(id: string) {
-    client.models.Todo.delete({ id })
+
+  return <>{children}</>;
+}
+
+function RedirectToRoot() {
+  return <Navigate to="/" replace />;
+}
+
+function AppRoutes({ showLoginForm }: { showLoginForm: boolean }) {
+  const { user } = useAuthenticator();
+  const location = useLocation();
+
+  // If not authenticated and trying to access protected routes, redirect to root
+  if (!user && location.pathname !== "/") {
+    return <Navigate to="/" replace />;
   }
 
   return (
-    <main>      
-      <h1 className="text-2xl font-bold">{user?.signInDetails?.loginId}'s todos</h1>
-      <p className="text-lg">{hello}</p>
-      <p className="text-lg">Subscription ID: {subscription?.subscriptionId}</p>
-      <p className="text-lg">Subscription Status: {subscription?.subscriptionStatus}</p>
-      <p className="text-lg">Subscription OK: {subscription?.ok ? "Yes" : "No"}</p>
-      <Button onClick={createTodo}>+ new</Button>
-      <ul className="list-none">
-        {todos.map((todo) => (
-          <li className="bg-white p-2 rounded-md" key={todo.id} onClick={() => deleteTodo(todo.id)}>{todo.content}</li>
-        ))}
-      </ul>
-      <Button onClick={signOut}>Sign out</Button>
-    </main>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          user ? (
+            <Navigate to="/dashboard" replace />
+          ) : showLoginForm ? (
+            // Authenticator will show its form
+            <div />
+          ) : (
+            <LoginPage />
+          )
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <DashboardPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/subscriptions"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <SubscriptionsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<RedirectToRoot />} />
+    </Routes>
+  );
+}
+
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [showLoginForm, setShowLoginForm] = useState(false);
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        await getCurrentUser();
+        setIsAuthenticated(true);
+      } catch {
+        setIsAuthenticated(false);
+      }
+    }
+    checkAuth();
+  }, []);
+
+  // Show loading state while checking auth
+  if (isAuthenticated === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <BrowserRouter>
+      {isAuthenticated || showLoginForm ? (
+        <Authenticator
+          components={{
+          }}
+        >
+          <AppRoutes showLoginForm={showLoginForm} />
+        </Authenticator>
+      ) : (
+        <Routes>
+          <Route
+            path="/"
+            element={<LoginPage onSignInClick={() => setShowLoginForm(true)} />}
+          />
+          <Route path="*" element={<RedirectToRoot />} />
+        </Routes>
+      )}
+    </BrowserRouter>
   );
 }
 
