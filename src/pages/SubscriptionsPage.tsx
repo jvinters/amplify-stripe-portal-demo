@@ -4,9 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { fetchSubscriptions } from "@/lib/mockData";
 import type { Subscription, SubscriptionStatus } from "@/types";
 import { SubscriptionStatus as StatusEnum } from "@/types";
+import { generateClient } from "@aws-amplify/api";
+import type { Schema } from "../../amplify/data/resource";
+
+const client = generateClient<Schema>();
 
 function getStatusVariant(status: SubscriptionStatus): "default" | "destructive" | "secondary" | "outline" {
   switch (status) {
@@ -41,8 +44,17 @@ export function SubscriptionsPage() {
   useEffect(() => {
     async function loadSubscriptions() {
       try {
-        const data = await fetchSubscriptions();
-        setSubscriptions(data);
+        const data = await client.queries.getSubscriptions();
+        setSubscriptions(data.data?.map((subscription) => ({
+          id: subscription?.subscriptionId ?? "",
+          status: subscription?.subscriptionStatus as SubscriptionStatus ?? "",
+          planName: subscription?.planName ?? "",
+          price: 0,
+          currency: "",
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(),
+          cancelAtPeriodEnd: false,
+        })) ?? []);
       } catch (error) {
         console.error("Failed to load subscriptions:", error);
       } finally {
