@@ -76,7 +76,12 @@ export function SubscriptionsPage() {
             Manage your active and past subscriptions
           </p>
         </div>
-        <Button onClick={handleManageBilling}>Manage Billing</Button>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/dashboard">Back to Dashboard</Link>
+          </Button>
+          <Button onClick={handleManageBilling}>Manage Billing</Button>
+        </div>
       </div>
 
       {subscriptions.length === 0 ? (
@@ -135,11 +140,7 @@ export function SubscriptionsPage() {
         </div>
       )}
 
-      <div className="flex justify-start">
-        <Button variant="outline" asChild>
-          <Link to="/dashboard">Back to Dashboard</Link>
-        </Button>
-      </div>
+
     </div>
   );
 }
