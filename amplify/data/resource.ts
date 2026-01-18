@@ -1,5 +1,6 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 import { getSubscriptions } from "../functions/get-subscriptions/resource";
+import { createPortalSession } from "../functions/create-portal-session/resource";
 
 const schema = a.schema({
   SubscriptionResponse: a.customType({
@@ -21,7 +22,15 @@ const schema = a.schema({
     .query()
     .returns(a.ref('SubscriptionResponse').array())
     .authorization(allow => [allow.authenticated()])
-    .handler(a.handler.function(getSubscriptions))
+    .handler(a.handler.function(getSubscriptions)),
+  createPortalSession: a
+    .mutation()
+    .arguments({ returnUrl: a.string().required() })
+    .returns(a.customType({
+      url: a.string(),
+    }))
+    .authorization(allow => [allow.authenticated()])
+    .handler(a.handler.function(createPortalSession))
 });
 
 export type Schema = ClientSchema<typeof schema>;
