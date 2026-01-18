@@ -10,7 +10,7 @@ export function Layout({ children }: LayoutProps) {
   const { signOut } = useAuthenticator();
 
   return (
-    <div className="min-h-screen bg-background max-w-6xl w-full mx-auto">
+    <div className="min-h-screen bg-background max-w-3xl w-full mx-auto">
       <nav className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-6">
