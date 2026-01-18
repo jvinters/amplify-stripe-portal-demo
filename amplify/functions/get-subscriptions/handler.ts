@@ -1,10 +1,21 @@
 import Stripe from 'stripe';
 import { Schema } from '../../data/resource';
 
+type SubscriptionResponse = Schema["SubscriptionResponse"]["type"];
+
 /**
  * The SubscriptionStatus type
  */
-type SubscriptionStatus = Schema["SubscriptionResponse"]["type"]['subscriptionStatus'];
+type SubscriptionStatus = SubscriptionResponse['subscriptionStatus'];
+
+/**
+ * The type of the getSubscriptions function handler
+ */
+type GetSubscriptionsFunctionHandler = Schema["getSubscriptions"]["functionHandler"];
+
+type StripeSubscription = Stripe.Subscription & {
+  plan: Stripe.Plan;
+};
 
 /**
  * The Stripe client
@@ -36,7 +47,7 @@ function mapSubscriptionStatus(status: Stripe.Subscription.Status): Subscription
  * Gets the subscriptions for the authenticated user
  * @returns The subscriptions
  */
-export const handler: Schema["getSubscriptions"]["functionHandler"] = async () => {
+export const handler: GetSubscriptionsFunctionHandler = async () => {
   const customerId = process.env.STRIPE_CUSTOMER_ID!;
 
   if (!customerId) {
@@ -45,38 +56,22 @@ export const handler: Schema["getSubscriptions"]["functionHandler"] = async () =
 
   const subscriptionsQuery = await stripe.subscriptions.list({
     customer: customerId,
-    expand: ['data.items'],
+    expand: ['data.plan.product'],
   });
 
-  console.log(subscriptionsQuery.data);
-
-  const subscriptions = subscriptionsQuery.data.map((subscription) => {
-    const item = subscription.items.data[0];
-    const price = item?.price;
-    const product = price?.product as Stripe.Product | null;
-
-    const planName =
-      price?.nickname ??
-      product?.name ??
-      'Unknown Plan';
-
-    const renewalDate = subscription.start_date
-      ? new Date(subscription.start_date * 1000).toISOString()
-      : undefined;
+  return subscriptionsQuery.data.map((subscription) => {
+    const stripeSubscription = subscription as StripeSubscription;
+    const currentPeriodStart = new Date(subscription.items.data[0].current_period_start * 1000).toISOString();
+    const currentPeriodEnd = new Date(subscription.items.data[0].current_period_end * 1000).toISOString();
 
     return {
-      id: subscription.id,
-      status: mapSubscriptionStatus(subscription.status),
-      planName,
-      renewalDate,
-    };
+      subscriptionId: stripeSubscription.id,
+      subscriptionStatus: mapSubscriptionStatus(stripeSubscription.status),
+      planName: (stripeSubscription.plan.product as Stripe.Product)?.name ?? "Unknown Plan",
+      price: stripeSubscription.plan.amount ?? 0,
+      currency: stripeSubscription.plan.currency ?? "USD",
+      currentPeriodStart,
+      currentPeriodEnd,
+    } satisfies SubscriptionResponse;
   });
-
-
-  return subscriptions.map((subscription) => ({
-    subscriptionId: subscription.id,
-    subscriptionStatus: subscription.status,
-    planName: subscription.planName,
-    renewalDate: subscription.renewalDate,
-  }));
 };

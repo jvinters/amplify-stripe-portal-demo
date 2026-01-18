@@ -16,7 +16,10 @@ const schema = a.schema({
       'unpaid'
     ]),
     planName: a.string(),
-    renewalDate: a.string(),
+    price: a.float(),
+    currency: a.string(),
+    currentPeriodStart: a.datetime(),
+    currentPeriodEnd: a.datetime(),
   }),
   getSubscriptions: a
     .query()

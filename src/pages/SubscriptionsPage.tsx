@@ -1,62 +1,62 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import type { Subscription, SubscriptionStatus } from "@/types";
-import { SubscriptionStatus as StatusEnum } from "@/types";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ItemGroup, ItemSeparator } from "@/components/ui/item";
+import { SubscriptionItem } from "@/components/features/SubscriptionItem";
+import type { SubscriptionStatus } from "@/types";
 import { generateClient } from "@aws-amplify/api";
 import type { Schema } from "../../amplify/data/resource";
 
 const client = generateClient<Schema>();
 
-function getStatusVariant(status: SubscriptionStatus): "default" | "destructive" | "secondary" | "outline" {
-  switch (status) {
-    case StatusEnum.ACTIVE:
-    case StatusEnum.TRIALING:
-      return "default";
-    case StatusEnum.CANCELED:
-    case StatusEnum.INCOMPLETE_EXPIRED:
-      return "destructive";
-    case StatusEnum.PAST_DUE:
-    case StatusEnum.UNPAID:
-      return "outline";
-    case StatusEnum.PAUSED:
-    case StatusEnum.INCOMPLETE:
-      return "secondary";
-    default:
-      return "default";
-  }
-}
-
-function formatStatus(status: SubscriptionStatus): string {
-  return status
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+interface SubscriptionData {
+  subscriptionId: string;
+  subscriptionStatus: SubscriptionStatus;
+  planName: string;
+  price?: number;
+  currency?: string;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
 }
 
 export function SubscriptionsPage() {
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [subscriptions, setSubscriptions] = useState<SubscriptionData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [creatingSession, setCreatingSession] = useState(false);
 
   useEffect(() => {
     async function loadSubscriptions() {
       try {
+        setError(null);
         const data = await client.queries.getSubscriptions();
-        setSubscriptions(data.data?.map((subscription) => ({
-          id: subscription?.subscriptionId ?? "",
-          status: subscription?.subscriptionStatus as SubscriptionStatus ?? "",
-          planName: subscription?.planName ?? "",
-          price: 0,
-          currency: "",
-          currentPeriodStart: new Date(),
-          currentPeriodEnd: new Date(),
-          cancelAtPeriodEnd: false,
-        })) ?? []);
-      } catch (error) {
-        console.error("Failed to load subscriptions:", error);
+        setSubscriptions(
+          data.data?.map((subscription) => ({
+            subscriptionId: subscription?.subscriptionId ?? "",
+            subscriptionStatus: (subscription?.subscriptionStatus as SubscriptionStatus) ?? "",
+            planName: subscription?.planName ?? "",
+            price: subscription?.price ?? undefined,
+            currency: subscription?.currency ?? undefined,
+            currentPeriodStart: subscription?.currentPeriodStart ?? undefined,
+            currentPeriodEnd: subscription?.currentPeriodEnd ?? undefined,
+          } satisfies SubscriptionData)) ?? []
+        );
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Failed to load subscriptions";
+        setError(errorMessage);
+        console.error("Failed to load subscriptions:", err);
       } finally {
         setLoading(false);
       }
@@ -65,19 +65,38 @@ export function SubscriptionsPage() {
     loadSubscriptions();
   }, []);
 
-  const handleManageBilling = () => {
-    // Placeholder for future backend integration
-    console.log("Manage Billing clicked - will integrate with backend function");
-    // TODO: Call backend function to create Stripe Billing Portal Session
+  const handleManageBillingClick = () => {
+    setDialogOpen(true);
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-muted-foreground">Loading subscriptions...</p>
-      </div>
-    );
-  }
+  const handleConfirmManageBilling = async () => {
+    try {
+      setCreatingSession(true);
+      const data = await client.mutations.createPortalSession({ returnUrl: 'http://localhost:5173/subscriptions' });
+      
+      // Check for errors in the response
+      if (data.errors && data.errors.length > 0) {
+        console.error("Failed to create portal session:", data.errors);
+        return;
+      }
+      
+      if (data.data?.url) {
+        window.location.href = data.data.url;
+      } else {
+        throw new Error("No URL returned from portal session creation");
+      }
+    } catch (err) {
+      console.error("Failed to create portal session:", err);
+    } finally {
+      setDialogOpen(false);
+      setCreatingSession(false);
+    }
+  };
+
+  const handleViewSubscription = (subscriptionId: string) => {
+    // Placeholder for future implementation
+    console.log("View subscription:", subscriptionId);
+  };
 
   return (
     <div className="space-y-6">
@@ -92,67 +111,69 @@ export function SubscriptionsPage() {
           <Button variant="outline" asChild>
             <Link to="/dashboard">Back to Dashboard</Link>
           </Button>
-          <Button onClick={handleManageBilling}>Manage Billing</Button>
+          <Button
+            onClick={handleManageBillingClick}
+            disabled={creatingSession}
+          >
+            {creatingSession ? <Spinner /> : ""}
+            Manage Billing
+          </Button>
         </div>
       </div>
 
-      {subscriptions.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">No subscriptions found</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2">
-          {subscriptions.map((subscription) => (
-            <Card key={subscription.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>{subscription.planName}</CardTitle>
-                  <Badge variant={getStatusVariant(subscription.status)}>
-                    {formatStatus(subscription.status)}
-                  </Badge>
-                </div>
-                <CardDescription className="font-mono text-xs">
-                  {subscription.id}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Price</p>
-                  <p className="font-medium text-lg">
-                    {subscription.currency === "USD" ? "$" : ""}
-                    {subscription.price.toFixed(2)} {subscription.currency}
-                  </p>
-                </div>
-                <Separator />
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Current Period
-                  </p>
-                  <p className="font-medium">
-                    {subscription.currentPeriodStart.toLocaleDateString()} -{" "}
-                    {subscription.currentPeriodEnd.toLocaleDateString()}
-                  </p>
-                </div>
-                {subscription.cancelAtPeriodEnd && (
-                  <>
-                    <Separator />
-                    <div>
-                      <p className="text-sm text-warning">
-                        This subscription will cancel at the end of the current
-                        period
-                      </p>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+      <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Manage Billing</AlertDialogTitle>
+            <AlertDialogDescription>
+              You will be redirected to the billing portal where you can manage your subscription, update payment methods, and view billing history. Do you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmManageBilling}
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-muted-foreground">Loading subscriptions...</p>
         </div>
+      ) : error ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center space-y-2">
+            <p className="text-destructive font-medium">Error loading subscriptions</p>
+            <p className="text-muted-foreground text-sm">{error}</p>
+          </div>
+        </div>
+      ) : subscriptions.length === 0 ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-muted-foreground">No subscriptions found</p>
+        </div>
+      ) : (
+        <ItemGroup className="space-y-0">
+          {subscriptions.map((subscription, index) => (
+            <div key={subscription.subscriptionId}>
+              <SubscriptionItem
+                subscriptionId={subscription.subscriptionId}
+                subscriptionStatus={subscription.subscriptionStatus}
+                planName={subscription.planName}
+                price={subscription.price}
+                currency={subscription.currency}
+                currentPeriodStart={subscription.currentPeriodStart}
+                currentPeriodEnd={subscription.currentPeriodEnd}
+                onView={() => handleViewSubscription(subscription.subscriptionId)}
+              />
+              {index < subscriptions.length - 1 && <ItemSeparator />}
+            </div>
+          ))}
+        </ItemGroup>
       )}
-
-
     </div>
   );
 }
