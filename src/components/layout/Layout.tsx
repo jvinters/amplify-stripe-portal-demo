@@ -15,7 +15,7 @@ export function Layout({ children }: LayoutProps) {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <Link to="/dashboard" className="text-lg font-semibold">
-              CPOS
+              Stripe Portal Demo
             </Link>
             <div className="flex gap-4">
               <Link

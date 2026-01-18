@@ -9,7 +9,7 @@ export function LoginPage({ onSignInClick }: LoginPageProps) {
     <div className="flex items-center justify-center min-h-screen">
       <div className="max-w-md w-full space-y-6 text-center">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold">Welcome to CPOS</h1>
+          <h1 className="text-3xl font-bold">Welcome to Stripe Portal Demo</h1>
           <p className="text-muted-foreground">
             Please sign in to access your dashboard and manage your subscriptions.
           </p>
