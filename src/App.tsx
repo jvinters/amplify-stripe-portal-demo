@@ -99,7 +99,7 @@ function App() {
   return (
     <BrowserRouter>
       {isAuthenticated || showLoginForm ? (
-        <Authenticator
+        <Authenticator className="h-dvh flex items-center justify-center"
           components={{
           }}
         >
