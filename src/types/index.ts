@@ -1,27 +1,12 @@
 export enum SubscriptionStatus {
   ACTIVE = "active",
   CANCELED = "canceled",
-  PAST_DUE = "past_due",
-  UNPAID = "unpaid",
   INCOMPLETE = "incomplete",
   INCOMPLETE_EXPIRED = "incomplete_expired",
-  TRIALING = "trialing",
+  PAST_DUE = "past_due",
   PAUSED = "paused",
-}
-
-export interface UserProfile {
-  id: string;
-  email: string;
-  name: string;
-  createdAt: Date;
-}
-
-export interface StripeInfo {
-  customerId: string;
-  totalSubscriptions: number;
-  activeSubscriptions: number;
-  totalMonthlyRevenue: number;
-  currency: string;
+  TRIALING = "trialing",
+  UNPAID = "unpaid",
 }
 
 export interface Subscription {
