@@ -41,6 +41,7 @@ export function SubscriptionsPage() {
     async function loadSubscriptions() {
       try {
         setError(null);
+        setLoading(true);
         const data = await client.queries.getSubscriptions();
         setSubscriptions(
           data.data?.map((subscription) => ({
