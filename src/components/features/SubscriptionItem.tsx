@@ -7,7 +7,7 @@ import {
   ItemDescription,
   ItemActions,
 } from "@/components/ui/item";
-import type { SubscriptionStatus } from "@/types";
+import { SubscriptionRenewalInterval, SubscriptionStatus } from "@/types";
 import { SubscriptionStatus as StatusEnum } from "@/types";
 
 interface SubscriptionItemProps {
@@ -16,7 +16,7 @@ interface SubscriptionItemProps {
   planName: string;
   price?: number;
   currency?: string;
-  currentPeriodStart?: string;
+  renewalInterval?: SubscriptionRenewalInterval;
   currentPeriodEnd?: string;
   onView?: () => void;
 }
@@ -71,20 +71,33 @@ function formatPrice(price?: number, currency?: string): string | null {
   return formatter.format(price / 100);
 }
 
+function formatRenewalInterval(interval: SubscriptionRenewalInterval): string {
+  switch (interval) {
+    case SubscriptionRenewalInterval.DAY:
+    return "Daily";
+    case SubscriptionRenewalInterval.WEEK:
+    return "Weekly";
+    case SubscriptionRenewalInterval.MONTH:
+    return "Monthly";
+    case SubscriptionRenewalInterval.YEAR:
+    return "Yearly";
+  }
+}
+
 export function SubscriptionItem({
   subscriptionStatus,
   planName,
   price,
   currency,
-  currentPeriodStart,
+  renewalInterval,
   currentPeriodEnd,
   onView,
 }: SubscriptionItemProps) {
   const formattedPrice = formatPrice(price, currency);
-  const formattedCurrentPeriodStart = formatDate(currentPeriodStart);
+  const formattedRenewalInterval = renewalInterval ? formatRenewalInterval(renewalInterval) : null;
   const formattedCurrentPeriodEnd = formatDate(currentPeriodEnd);
   const hasPlanName = planName && planName.trim() !== "";
-  const hasCurrentPeriodInfo = formattedCurrentPeriodStart !== null && formattedCurrentPeriodEnd !== null;
+  const hasCurrentPeriodInfo = formattedRenewalInterval !== null && formattedCurrentPeriodEnd !== null;
 
   return (
     <Item variant="muted">
@@ -101,7 +114,7 @@ export function SubscriptionItem({
           )}
           {hasCurrentPeriodInfo && (
             <ItemDescription>
-              {formattedCurrentPeriodStart} - {formattedCurrentPeriodEnd}
+              Renews {formattedRenewalInterval} on {formattedCurrentPeriodEnd}
             </ItemDescription>
           )}
         </div>

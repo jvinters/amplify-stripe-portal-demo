@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ItemGroup, ItemSeparator } from "@/components/ui/item";
 import { SubscriptionItem } from "@/components/features/SubscriptionItem";
-import type { SubscriptionStatus } from "@/types";
+import type { SubscriptionRenewalInterval, SubscriptionStatus } from "@/types";
 import { generateClient } from "@aws-amplify/api";
 import type { Schema } from "../../amplify/data/resource";
 
@@ -26,7 +26,7 @@ interface SubscriptionData {
   planName: string;
   price?: number;
   currency?: string;
-  currentPeriodStart?: string;
+  renewalInterval?: SubscriptionRenewalInterval;
   currentPeriodEnd?: string;
 }
 
@@ -49,7 +49,7 @@ export function SubscriptionsPage() {
             planName: subscription?.planName ?? "",
             price: subscription?.price ?? undefined,
             currency: subscription?.currency ?? undefined,
-            currentPeriodStart: subscription?.currentPeriodStart ?? undefined,
+            renewalInterval: (subscription?.renewalInterval as SubscriptionRenewalInterval) ?? undefined,
             currentPeriodEnd: subscription?.currentPeriodEnd ?? undefined,
           } satisfies SubscriptionData)) ?? []
         );
@@ -91,11 +91,6 @@ export function SubscriptionsPage() {
       setDialogOpen(false);
       setCreatingSession(false);
     }
-  };
-
-  const handleViewSubscription = (subscriptionId: string) => {
-    // Placeholder for future implementation
-    console.log("View subscription:", subscriptionId);
   };
 
   return (
@@ -156,7 +151,7 @@ export function SubscriptionsPage() {
           <p className="text-muted-foreground">No subscriptions found</p>
         </div>
       ) : (
-        <ItemGroup className="space-y-0">
+        <ItemGroup className="space-y-4">
           {subscriptions.map((subscription, index) => (
             <div key={subscription.subscriptionId}>
               <SubscriptionItem
@@ -165,9 +160,8 @@ export function SubscriptionsPage() {
                 planName={subscription.planName}
                 price={subscription.price}
                 currency={subscription.currency}
-                currentPeriodStart={subscription.currentPeriodStart}
+                renewalInterval={subscription.renewalInterval}
                 currentPeriodEnd={subscription.currentPeriodEnd}
-                onView={() => handleViewSubscription(subscription.subscriptionId)}
               />
               {index < subscriptions.length - 1 && <ItemSeparator />}
             </div>

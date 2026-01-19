@@ -15,6 +15,12 @@ const schema = a.schema({
       'trialing',
       'unpaid'
     ]),
+    renewalInterval: a.enum([
+      'day',
+      'week',
+      'month',
+      'year'
+    ]),
     planName: a.string(),
     price: a.float(),
     currency: a.string(),

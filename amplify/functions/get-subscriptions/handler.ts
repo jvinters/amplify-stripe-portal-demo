@@ -1,8 +1,11 @@
 import Stripe from 'stripe';
 import { Schema } from '../../data/resource';
+import { createStripeClient } from '../../shared/stripe';
+import { envCustomerIdProvider } from '../../shared/customer-id-provider';
 
 type SubscriptionResponse = Schema["SubscriptionResponse"]["type"];
 type SubscriptionStatus = SubscriptionResponse['subscriptionStatus'];
+type SubscriptionRenewalInterval = SubscriptionResponse['renewalInterval'];
 type GetSubscriptionsFunctionHandler = Schema["getSubscriptions"]["functionHandler"];
 
 type StripeSubscription = Stripe.Subscription & {
@@ -31,21 +34,34 @@ function mapSubscriptionStatus(status: Stripe.Subscription.Status): Subscription
   }
 }
 
+
+function mapSubscriptionRenewalInterval(interval: Stripe.Plan.Interval): SubscriptionRenewalInterval {
+  switch (interval) {
+    case 'month':
+    case 'year':
+    case 'day':
+    case 'week':
+      return interval;
+    default:
+      throw new Error(`Unsupported interval: ${interval}`);
+  }
+}
 /**
  * Extracts period information from a subscription item
  * @param item - The subscription item
- * @returns Object with currentPeriodStart and currentPeriodEnd as ISO strings
+ * @returns Object with renewalInterval, currentPeriodStart and currentPeriodEnd as ISO strings
  * @throws {Error} If the item is missing required period information
  */
 function extractPeriodInfo(item: Stripe.SubscriptionItem): {
+  renewalInterval: SubscriptionRenewalInterval;
   currentPeriodStart: string;
   currentPeriodEnd: string;
 } {
   if (!item.current_period_start || !item.current_period_end) {
     throw new Error('Subscription item is missing period information');
   }
-
   return {
+    renewalInterval: mapSubscriptionRenewalInterval(item.plan.interval),
     currentPeriodStart: new Date(item.current_period_start * 1000).toISOString(),
     currentPeriodEnd: new Date(item.current_period_end * 1000).toISOString(),
   };
@@ -72,6 +88,7 @@ function transformSubscription(subscription: StripeSubscription): SubscriptionRe
     planName: product?.name ?? 'Unknown Plan',
     price: subscription.plan.amount ?? 0,
     currency: subscription.plan.currency ?? 'usd',
+    renewalInterval: periodInfo.renewalInterval,
     currentPeriodStart: periodInfo.currentPeriodStart,
     currentPeriodEnd: periodInfo.currentPeriodEnd,
   } satisfies SubscriptionResponse;

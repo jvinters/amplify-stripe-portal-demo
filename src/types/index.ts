@@ -9,12 +9,20 @@ export enum SubscriptionStatus {
   UNPAID = "unpaid",
 }
 
+export enum SubscriptionRenewalInterval {
+  DAY = "day",
+  WEEK = "week",
+  MONTH = "month",
+  YEAR = "year",
+}
+
 export interface Subscription {
   id: string;
   status: SubscriptionStatus;
   planName: string;
   price: number;
   currency: string;
+  renewalInterval: SubscriptionRenewalInterval;
   currentPeriodStart: Date;
   currentPeriodEnd: Date;
   cancelAtPeriodEnd: boolean;
