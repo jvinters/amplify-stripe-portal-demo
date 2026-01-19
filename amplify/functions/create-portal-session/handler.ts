@@ -1,37 +1,9 @@
 import Stripe from 'stripe';
 import { Schema } from '../../data/resource';
+import { createStripeClient } from '../../shared/stripe';
+import { envCustomerIdProvider } from '../../shared/customer-id-provider';
 
 type CreatePortalSessionFunctionHandler = Schema["createPortalSession"]["functionHandler"];
-
-/**
- * Validates that required environment variables are set
- * @throws {Error} If required environment variables are missing
- */
-function validateEnvironment(): { secretKey: string; customerId: string } {
-  const secretKey = process.env.STRIPE_SECRET_KEY;
-  const customerId = process.env.STRIPE_CUSTOMER_ID;
-
-  if (!secretKey) {
-    throw new Error('STRIPE_SECRET_KEY environment variable is not set');
-  }
-
-  if (!customerId) {
-    throw new Error('STRIPE_CUSTOMER_ID environment variable is not set');
-  }
-
-  return { secretKey, customerId };
-}
-
-/**
- * Initializes and returns the Stripe client
- * @param secretKey - The Stripe secret key
- * @returns Configured Stripe client instance
- */
-function createStripeClient(secretKey: string): Stripe {
-  return new Stripe(secretKey, {
-    apiVersion: '2025-12-15.clover',
-  });
-}
 
 /**
  * Validates that the return URL is a valid URL format
@@ -95,8 +67,8 @@ async function createPortalSession(
  * @throws {Error} If environment variables are missing, returnUrl is invalid, or Stripe API call fails
  */
 export const handler: CreatePortalSessionFunctionHandler = async (event) => {
-  const { secretKey, customerId } = validateEnvironment();
-  const stripe = createStripeClient(secretKey);
+  const customerId = await envCustomerIdProvider();
+  const stripe = createStripeClient();
 
   const { returnUrl } = event.arguments;
   validateReturnUrl(returnUrl);

@@ -10,36 +10,6 @@ type StripeSubscription = Stripe.Subscription & {
 };
 
 /**
- * Validates that required environment variables are set
- * @throws {Error} If required environment variables are missing
- */
-function validateEnvironment(): { secretKey: string; customerId: string } {
-  const secretKey = process.env.STRIPE_SECRET_KEY;
-  const customerId = process.env.STRIPE_CUSTOMER_ID;
-
-  if (!secretKey) {
-    throw new Error('STRIPE_SECRET_KEY environment variable is not set');
-  }
-
-  if (!customerId) {
-    throw new Error('STRIPE_CUSTOMER_ID environment variable is not set');
-  }
-
-  return { secretKey, customerId };
-}
-
-/**
- * Initializes and returns the Stripe client
- * @param secretKey - The Stripe secret key
- * @returns Configured Stripe client instance
- */
-function createStripeClient(secretKey: string): Stripe {
-  return new Stripe(secretKey, {
-    apiVersion: '2025-12-15.clover',
-  });
-}
-
-/**
  * Maps a Stripe subscription status to our SubscriptionStatus type
  * @param status - The Stripe subscription status
  * @returns The mapped SubscriptionStatus
@@ -113,8 +83,8 @@ function transformSubscription(subscription: StripeSubscription): SubscriptionRe
  * @throws {Error} If environment variables are missing or Stripe API call fails
  */
 export const handler: GetSubscriptionsFunctionHandler = async () => {
-  const { secretKey, customerId } = validateEnvironment();
-  const stripe = createStripeClient(secretKey);
+  const customerId = await envCustomerIdProvider();
+  const stripe = createStripeClient();
 
   try {
     const subscriptionsQuery = await stripe.subscriptions.list({
