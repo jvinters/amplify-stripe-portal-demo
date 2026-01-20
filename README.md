@@ -197,7 +197,7 @@ The production build will be in the `dist` directory.
 
 ### User Experience Assumptions
 
-- **Return URL**: The return URL for the billing portal is hardcoded to `http://localhost:5173/subscriptions` in the frontend. This works for local development but would need to be dynamic in production based on environment and current route.
+- **Return URL**: The return URL for the billing portal is dynamically constructed from `window.location.origin` and the current route pathname. This works across all environments (local, staging, production) without configuration changes.
 
 - **Error Handling**: Basic error messages are displayed to users. There are no retry mechanisms, and errors are logged to the console for debugging. The UI shows generic error states without specific recovery actions.
 
@@ -231,23 +231,18 @@ The production build will be in the `dist` directory.
    - **Improvement**: Create `src/api/subscription.ts` to centralize API calls, error handling, and response transformation. This improves testability and makes it easier to add features like request caching or request/response logging.
    - **Considerations**: Keep it simple initially—avoid over-engineering. Add caching only if performance becomes an issue.
 
-5. **Dynamic Return URLs**
-   - **Current State**: Hardcoded `http://localhost:5173/subscriptions` in `SubscriptionsPage.tsx`
-   - **Improvement**: Dynamically construct return URL from `window.location.origin` and current route. Make it configurable via environment variables for different deployment environments.
-   - **Implementation**: `const returnUrl = `${window.location.origin}${location.pathname}`;`
-
-6. **Subscription History & Invoices**
+5. **Subscription History & Invoices**
    - **Current State**: Only displays current active subscriptions
    - **Improvement**: Add queries to fetch subscription history, past invoices, and payment methods. Display billing history in a separate view or expandable section.
    - **Considerations**: Pagination for large histories, date range filtering, export functionality
 
 ### Low Priority
 
-7. **Loading States & Skeleton Screens**
+6. **Loading States & Skeleton Screens**
    - **Current State**: Basic "Loading subscriptions..." text
    - **Improvement**: Implement skeleton loaders that match the subscription item layout. This improves perceived performance and provides better visual feedback during data fetching.
 
-8. **Comprehensive Testing**
+7. **Comprehensive Testing**
    - **Current State**: No unit or integration tests
    - **Improvement**: Add Jest + React Testing Library for frontend components, unit tests for Lambda handlers (focusing on transformation logic and error handling), and integration tests for critical user flows (viewing subscriptions, creating portal session).
    - **Target Coverage**: 80% for business logic, 60% for UI components
