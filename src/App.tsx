@@ -7,6 +7,7 @@ import { LoginPage } from "@/pages/LoginPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { SubscriptionsPage } from "@/pages/SubscriptionsPage";
 import { Layout } from "@/components/layout/Layout";
+import { analytics } from "@/services/analytics";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuthenticator();
@@ -25,6 +26,13 @@ function RedirectToRoot() {
 function AppRoutes({ showLoginForm }: { showLoginForm: boolean }) {
   const { user } = useAuthenticator();
   const location = useLocation();
+
+  // Set user ID for analytics when authenticated
+  useEffect(() => {
+    if (user?.userId) {
+      analytics.setUserId(user.userId);
+    }
+  }, [user?.userId]);
 
   // If not authenticated and trying to access protected routes, redirect to root
   if (!user && location.pathname !== "/") {

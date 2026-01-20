@@ -11,6 +11,7 @@
     "sandbox": "npx ampx sandbox --stream-function-logs"
   },
   "dependencies": {
+    "@amplitude/analytics-browser": "^2.33.4",
     "@aws-amplify/ui-react": "^6.5.5",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-separator": "^1.1.8",

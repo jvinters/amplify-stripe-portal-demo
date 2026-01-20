@@ -17,6 +17,7 @@ import { SubscriptionItem } from "@/components/features/SubscriptionItem";
 import type { SubscriptionRenewalInterval, SubscriptionStatus } from "@/types";
 import { generateClient } from "@aws-amplify/api";
 import type { Schema } from "../../amplify/data/resource";
+import { analytics } from "@/services/analytics";
 
 const client = generateClient<Schema>();
 
@@ -37,13 +38,18 @@ export function SubscriptionsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creatingSession, setCreatingSession] = useState(false);
 
+  // Track page view on mount
+  useEffect(() => {
+    analytics.trackSubscriptionPageViewed();
+  }, []);
+
   useEffect(() => {
     async function loadSubscriptions() {
       try {
         setError(null);
         setLoading(true);
         const data = await client.queries.getSubscriptions();
-        setSubscriptions(
+        const subscriptions =
           data.data?.map((subscription) => ({
             subscriptionId: subscription?.subscriptionId ?? "",
             subscriptionStatus: (subscription?.subscriptionStatus as SubscriptionStatus) ?? "",
@@ -52,8 +58,9 @@ export function SubscriptionsPage() {
             currency: subscription?.currency ?? undefined,
             renewalInterval: (subscription?.renewalInterval as SubscriptionRenewalInterval) ?? undefined,
             currentPeriodEnd: subscription?.currentPeriodEnd ?? undefined,
-          } satisfies SubscriptionData)) ?? []
-        );
+          } satisfies SubscriptionData)) ?? [];
+
+        setSubscriptions(subscriptions);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to load subscriptions";
         setError(errorMessage);
@@ -67,6 +74,7 @@ export function SubscriptionsPage() {
   }, []);
 
   const handleManageBillingClick = () => {
+    analytics.trackManageBillingClicked();
     setDialogOpen(true);
   };
 
