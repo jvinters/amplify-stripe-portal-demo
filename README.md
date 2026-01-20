@@ -246,3 +246,4 @@ The production build will be in the `dist` directory.
    - **Current State**: No unit or integration tests
    - **Improvement**: Add Jest + React Testing Library for frontend components, unit tests for Lambda handlers (focusing on transformation logic and error handling), and integration tests for critical user flows (viewing subscriptions, creating portal session).
    - **Target Coverage**: 80% for business logic, 60% for UI components
+
