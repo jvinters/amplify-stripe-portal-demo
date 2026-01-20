@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -32,6 +32,7 @@ interface SubscriptionData {
 }
 
 export function SubscriptionsPage() {
+  const location = useLocation();
   const [subscriptions, setSubscriptions] = useState<SubscriptionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +82,8 @@ export function SubscriptionsPage() {
   const handleConfirmManageBilling = async () => {
     try {
       setCreatingSession(true);
-      const data = await client.mutations.createPortalSession({ returnUrl: 'http://localhost:5173/subscriptions' });
+      const returnUrl = `${window.location.origin}${location.pathname}`;
+      const data = await client.mutations.createPortalSession({ returnUrl });
       
       // Check for errors in the response
       if (data.errors && data.errors.length > 0) {
