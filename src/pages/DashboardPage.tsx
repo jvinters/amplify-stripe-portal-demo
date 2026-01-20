@@ -19,6 +19,11 @@ export function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    /**
+     * Loads the dashboard data from the API. Not scalable for large number of subscriptions, very inefficient.
+     * 
+     * Better solution would be to use a query to get the subscription count from the database / external API
+     */
     async function loadDashboardData() {
       try {
         setError(null);
