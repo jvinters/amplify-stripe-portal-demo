@@ -82,7 +82,7 @@ export function SubscriptionsPage() {
   const handleConfirmManageBilling = async () => {
     try {
       setCreatingSession(true);
-      const returnUrl = `${window.location.origin}${location.pathname}`;
+      const returnUrl = import.meta.env.VITE_BILLING_PORTAL_RETURN_URL ?? `${window.location.origin}${location.pathname}`;
       const data = await client.mutations.createPortalSession({ returnUrl });
       
       // Check for errors in the response

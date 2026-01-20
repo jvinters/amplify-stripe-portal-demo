@@ -9,6 +9,8 @@ frontend:
   phases:
     build:
       commands:
+        - echo "VITE_AMPLITUDE_API_KEY=$VITE_AMPLITUDE_API_KEY" >> .env
+        - echo "VITE_BILLING_PORTAL_RETURN_URL=$VITE_BILLING_PORTAL_RETURN_URL" >> .env
         - npm run build
   artifacts:
     baseDirectory: dist
