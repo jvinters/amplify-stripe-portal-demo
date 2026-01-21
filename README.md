@@ -27,11 +27,16 @@ Configure the following secrets in AWS Amplify:
    - Create a test customer in Stripe Dashboard
    - Format: `cus_...`
 
+3. **STRIPE_WEBHOOK_SECRET**: Your Stripe webhook signing secret (test mode)
+   - Get this from your webhook endpoint in the [Stripe Dashboard](https://dashboard.stripe.com/test/webhooks) (Signing secret)
+   - Format: `whsec_...`
+
 Use the Amplify CLI to set secrets:
 
 ```bash
 npx ampx sandbox secret set STRIPE_SECRET_KEY
 npx ampx sandbox secret set STRIPE_CUSTOMER_ID
+npx ampx sandbox secret set STRIPE_WEBHOOK_SECRET
 ```
 
 When prompted, enter the respective values.
@@ -87,13 +92,18 @@ npm install
    - View subscriptions (if the test customer has any)
    - Access the Stripe Billing Portal
 
-### Building for Production
+### Stripe Webhook (Current State)
 
-```bash
-npm run build
-```
+The `stripe-webhook-handler` function is currently **unfinished by design**: it verifies Stripe webhook signatures, then **only logs subscription lifecycle events**. It does not persist data or trigger any downstream business logic yet.
 
-The production build will be in the `dist` directory.
+- **Where to view logs**: run `npm run sandbox` and watch the sandbox console logs/terminal output (Amplify streams function logs while the sandbox is running).
+- **Supported events**: any event with type prefix `customer.subscription.*` is accepted; the handler currently has explicit logging for:
+  - `customer.subscription.created`
+  - `customer.subscription.deleted`
+  - `customer.subscription.paused`
+  - `customer.subscription.resumed`
+  - `customer.subscription.trial_will_end`
+  - `customer.subscription.updated`
 
 ## Architectural Decisions
 
