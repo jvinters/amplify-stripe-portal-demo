@@ -207,7 +207,7 @@ The `stripe-webhook-handler` function is currently **unfinished by design**: it 
 
 ### User Experience Assumptions
 
-- **Return URL**: The return URL for the billing portal is dynamically constructed from `window.location.origin` and the current route pathname. This works across all environments (local, staging, production) without configuration changes.
+- **Return URL**: The return URL for the billing portal is dynamically constructed from `window.location.origin` and the current route pathname. This works across any environment without configuration changes.
 
 - **Error Handling**: Basic error messages are displayed to users. There are no retry mechanisms, and errors are logged to the console for debugging. The UI shows generic error states without specific recovery actions.
 
