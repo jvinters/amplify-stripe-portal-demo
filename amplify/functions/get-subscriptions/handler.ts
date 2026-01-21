@@ -107,6 +107,7 @@ export const handler: GetSubscriptionsFunctionHandler = async () => {
     const subscriptionsQuery = await stripe.subscriptions.list({
       customer: customerId,
       expand: ['data.plan.product'],
+      status: 'all',
     });
 
     return subscriptionsQuery.data.map((subscription) => {

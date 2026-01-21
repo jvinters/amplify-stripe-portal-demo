@@ -98,6 +98,7 @@ export function SubscriptionItem({
   const formattedCurrentPeriodEnd = formatDate(currentPeriodEnd);
   const hasPlanName = planName && planName.trim() !== "";
   const hasCurrentPeriodInfo = formattedRenewalInterval !== null && formattedCurrentPeriodEnd !== null;
+  const displayRenewalInterval = hasCurrentPeriodInfo && (subscriptionStatus === StatusEnum.ACTIVE || subscriptionStatus === StatusEnum.TRIALING);
 
   return (
     <Item variant="muted">
@@ -112,7 +113,7 @@ export function SubscriptionItem({
           {formattedPrice && (
             <ItemDescription>{formattedPrice}</ItemDescription>
           )}
-          {hasCurrentPeriodInfo && (
+          {displayRenewalInterval && (
             <ItemDescription>
               Renews {formattedRenewalInterval} on {formattedCurrentPeriodEnd}
             </ItemDescription>
